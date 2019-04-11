@@ -1,25 +1,34 @@
-function tau = predictor_coder(domain, refs, prec)
-%PREDICTOR Summary of this function goes here
+function [taus, coeffs] = predictor_coder(grey_LF, refs, blocks)
+%PREDICTOR_CODER Summary of this function goes here
 %   Detailed explanation goes here
 
-[n, m, ~, ~] = size(domain);
-[~, ~, o] = size(refs);
+[M, N, ~, ~] = size(grey_LF);
+nb_blocks = size(blocks,1);
+Q = size(refs, 3);
+coeffs = zeros(nb_blocks,M,N,Q);
+taus = zeros(nb_blocks,M,N,Q,2);
+reverseStr = [];
 
-f_refs = zeros(size(refs));
-for i=1:o
-    f_refs(:,:,i) = fft2(refs(:,:,i));
-end
+fprintf('\nCompressing block : ');
+for i_block = 1:nb_blocks
+    msg = sprintf('%d/%d', i_block, nb_blocks);
+    fprintf([reverseStr, msg]);
+    reverseStr = repmat(sprintf('\b'), 1, length(msg));
 
-tau = zeros(n,m, o, 2);
-for i=1:n
-    for j=1:m
-        crt = squeeze(domain(i,j,:,:));
-        f_crt = fft2(crt);
-        for k=1:o
-            tau(i,j,k,:) = find_translation(f_crt,f_refs(:,:,k),prec);
-        end
-    end
+    mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
+    mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
+    
+    crt_ref = refs(mpxli,mpxlj,:);
+    domain = grey_LF(:,:,mpxli,mpxlj);
+
+    % Find the translations
+    tau = block_predictor_coder(domain, crt_ref, 1);
+
+    % Compute coeffs
+    coeffs(i_block, :,:,:) = block_compute_coeffs(domain, tau, crt_ref);
+    taus(i_block, :,:,:,:) = tau;
 end
+fprintf('\tDone\n');
 
 end
 

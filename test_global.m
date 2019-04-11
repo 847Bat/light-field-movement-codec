@@ -1,7 +1,7 @@
 %%
-addpath(genpath('subaxis'));
-addpath(genpath('light-field-toolbox'));
-addpath(genpath('light-field-graph-codec'));
+addpath(genpath('modules/subaxis'));
+addpath(genpath('modules/light-field-toolbox'));
+addpath(genpath('modules/light-field-graph-codec'));
 
 load 'data/4DLF/People/Fountain_&_Vincent_2.mat'
 
@@ -36,45 +36,17 @@ coded_m = squeeze(grey_LF(8,8,:,:));
 
 refs = cat(3,coded_t, coded_r, coded_b, coded_l, coded_m);
 
-Q = size(refs, 3);
-coeffs = zeros(nb_blocks,M,N,Q);
-coeffs_lin = zeros(nb_blocks,M,N,Q);
-taus = zeros(nb_blocks,M,N,Q,2);
-reverseStr = [];
-
-fprintf('\nCompressing block : ');
-for i_block = 1:nb_blocks
-    msg = sprintf('%d/%d', i_block, nb_blocks);
-    fprintf([reverseStr, msg]);
-    reverseStr = repmat(sprintf('\b'), 1, length(msg));
-
-    mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
-    mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
-    
-    crt_ref = refs(mpxli,mpxlj,:);
-    domain = grey_LF(:,:,mpxli,mpxlj);
-
-    % Find the translations
-    tau = predictor_coder(domain, crt_ref, 1);
-
-    % Compute coeffs
-    coeffs(i_block, :,:,:) = compute_coeffs_nosub(domain, tau, crt_ref);
-    coeffs_lin(i_block, :,:,:) = compute_coeffs_nosub(domain, zeros(size(tau)), crt_ref);
-    taus(i_block, :,:,:,:) = tau;
-end
-fprintf('\tDone\n');
+[taus, coeffs] = predictor_coder(grey_LF, refs, blocks);
 
 % profile off
 % profsave
 
-%% Saving stuff
+%% Quantization
 
 taus_saved = taus;
 coeffs_saved = coeffs;
-coeffs_lin_saved = coeffs_lin;
 refs_saved = refs;
 
-%% Quantization
 Q_taus = 32;
 Q_coeffs = 2^8;
 Q_refs = 2^16;
@@ -83,50 +55,21 @@ taus = min(max(taus_saved,-Q_taus/2),Q_taus/2);   % taus are int, force range
 
 % the rest are float between 0 and 1
 coeffs = floor(coeffs_saved*Q_coeffs) / Q_coeffs;
-coeffs_lin = floor(coeffs_lin_saved*Q_coeffs) / Q_coeffs;
 refs = floor(refs_saved*Q_refs) / Q_refs;
 
 %% Decoder
-% Reconstruct predicted image
-predicted = zeros(size(grey_LF));
-lin_pred = zeros(size(grey_LF));
-reverseStr = [];
 
-fprintf('\nDecoding block : ');
-for i_block = 1:nb_blocks
-    msg = sprintf('%d/%d', i_block, nb_blocks);
-    fprintf([reverseStr, msg]);
-    reverseStr = repmat(sprintf('\b'), 1, length(msg));
-    
-    mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
-    mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
-    
-    crt_ref = refs(mpxli,mpxlj,:);
-
-    crt_tau = squeeze(taus(i_block, :,:,:,:));
-    crt_coeffs = squeeze(coeffs(i_block, :,:,:));
-    crt_coeffs_lin = squeeze(coeffs_lin(i_block, :,:,:));
-
-    predicted(:,:,mpxli,mpxlj) = ...
-        min(predictor_decoder_nosub(crt_ref, crt_tau, crt_coeffs),1);
-    lin_pred(:,:,mpxli,mpxlj) = ...
-        min(predictor_decoder_nosub(crt_ref, zeros(size(crt_tau)), crt_coeffs_lin),1);
-end
-fprintf('\tDone\n');
+predicted = predictor_decoder(refs, taus, coeffs, blocks);
 
 %% Improvment from linear
 mov_err = zeros(M,N);
-lin_err = zeros(M,N);
 
 for i=1:M
     for j=1:N
         ref = squeeze(grey_LF(i+(15-M)/2,j+(15-N)/2,:,:));
         mov_err(i,j) = psnr(squeeze(predicted(i,j,:,:)), ref);
-        lin_err(i,j) = psnr(squeeze(lin_pred(i,j,:,:)), ref);
     end
 end
-
-mov_err - lin_err
 
 %% Efficiency
 
@@ -134,9 +77,6 @@ compress_ratio = 16*size(grey_LF(:)) / (size(taus(:))*log2(Q_taus) + size(coeffs
 
 err_considered = mov_err(2:end-1,2:end-1);
 mov_perf = mean(err_considered(:))
-
-err_considered = lin_err(2:end-1,2:end-1);
-lin_perf = mean(err_considered(:))
 
 %%
 LFDispVidCirc(repmat(predicted, [1 1 1 1 3]));
@@ -207,7 +147,7 @@ figure;
 b=143;
 for i=blocks(b,1,1):blocks(b,1,2)
     for j=blocks(b,2,1):blocks(b,2,2)
-        subaxis(blocks(b,1,2)-blocks(b,1,1), blocks(b,2,2)-blocks(b,2,1), j-blocks(b,2,1)+1, i-blocks(b,1,1)+1, 'sh', 0.01, 'sv', 0.01, 'padding', 0, 'margin', 0);
+        subaxis(blocks(b,1,2)-blocks(b,1,1), blocks(b,2,2)-blocks(b,2,1), j-blocks(b,2,1)+1, i-blocks(b,1,1)+1, 'sh', 0.001, 'sv', 0.001, 'padding', 0, 'margin', 0);
         imagesc(squeeze(residuals(:,:,i,j))); 
         axis off;
     end
