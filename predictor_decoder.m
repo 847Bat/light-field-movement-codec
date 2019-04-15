@@ -9,7 +9,7 @@ nb_blocks = size(blocks, 1);
 predicted = zeros(M, N, O, P);
 reverseStr = [];
 
-fprintf('\nDecoding block : ');
+fprintf('\tDecoding block : ');
 for i_block = 1:nb_blocks
     msg = sprintf('%d/%d', i_block, nb_blocks);
     fprintf([reverseStr, msg]);

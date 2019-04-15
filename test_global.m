@@ -5,91 +5,81 @@ addpath(genpath('modules/light-field-graph-codec'));
 
 load 'data/4DLF/People/Fountain_&_Vincent_2.mat'
 
-%% Object segmentation  (blocks)
+filename = 'compressed.mat';
 
+% Transform to double
 LF_double = im2double(LF);
 grey_LF = 0.299 * LF_double(:,:,:,:,1) + 0.587 * LF_double(:,:,:,:,2) + 0.114 * LF_double(:,:,:,:,3);
+grey_LF = floor(grey_LF*(2^16))./2^16;
 
-MPXL_size = [31 25];
-[M, N, O, P] = size(squeeze(grey_LF));
-O = O/MPXL_size(1);
-P = P/MPXL_size(2);
-nb_blocks = 0*P;
-blocks = zeros(nb_blocks, 2, 2);
+%% Segmentation
+resized = imresize(abs(squeeze(grey_LF(8,3,:,:)) - squeeze(grey_LF(8,13,:,:))) + ...
+    abs(squeeze(grey_LF(3,8,:,:)) - squeeze(grey_LF(13,8,:,:))), [512 512]);
+% resized = imresize(squeeze(grey_LF(8,8,:,:)), [512 512]);
+S = qtdecomp(resized,.5, [32 32]);
+blocks = repmat(uint8(0),size(S));
 
-for i=1:O
-    for j=1:P
-        blocks((i-1)*P+j,:,:) = [[(i-1)*MPXL_size(1)+1 i*MPXL_size(1)]; [(j-1)*MPXL_size(2)+1 j*MPXL_size(2)]];
+for dim = [512 256 128 64 32 16 8 4 2 1]    
+  numblocks = length(find(S==dim));    
+  if (numblocks > 0)        
+    values = repmat(uint8(1),[dim dim numblocks]);
+    values(2:dim,2:dim,:) = 0;
+    blocks = qtsetblk(blocks,S,dim,values);
+  end
+end
+
+blocks(end,1:end) = 1;
+blocks(1:end,end) = 1;
+
+imshow(blocks,[])
+
+%%
+my_blocks = zeros(length(find(S>0)), 2, 2);
+resizer = [size(grey_LF,3)/512 0 ; 0 size(grey_LF,4)/512];
+counter = 1;
+for i=1:512
+    for j=1:512
+        if S(i,j) > 0
+            block_512 = [i i + S(i,j) - 1; j j + S(i,j) - 1];
+            if ceil((j + S(i,j))*resizer(2,2)) - ceil((j + S(i,j) - 1)*resizer(2,2)) > 1 && j + S(i,j) < 512
+                block_512(2,2) = j + S(i,j);
+            end
+            block_resized = ceil(resizer*block_512);
+            my_blocks(counter, :, :) = block_resized;
+            counter = counter + 1;
+        end
     end
 end
 
-%% Predictor
+%% Encoding
+encoder(grey_LF, filename, my_blocks);
 
-% profile on
+%% Display efficiency
+file = dir(filename);
+disp("Final bpp : " + num2str(file.bytes*8/numel(grey_LF)));
+stats = whos('-file',filename);
+bpp = num2cell([stats.bytes].'*8/numel(grey_LF));
+[stats.bpp] = bpp{:};
 
-% Define reference
-coded_t = squeeze(grey_LF(3,8,:,:));
-coded_r = squeeze(grey_LF(8,13,:,:));
-coded_b = squeeze(grey_LF(13,8,:,:));
-coded_l = squeeze(grey_LF(8,3,:,:));
-coded_m = squeeze(grey_LF(8,8,:,:));
-
-refs = cat(3,coded_t, coded_r, coded_b, coded_l, coded_m);
-
-[taus, coeffs] = predictor_coder(grey_LF, refs, blocks);
-
-% profile off
-% profsave
-
-%% Quantization
-
-taus_saved = taus;
-coeffs_saved = coeffs;
-refs_saved = refs;
-
-Q_taus = 32;
-Q_coeffs = 2^8;
-Q_refs = 2^16;
-
-taus = min(max(taus_saved,-Q_taus/2),Q_taus/2);   % taus are int, force range
-
-% the rest are float between 0 and 1
-coeffs = floor(coeffs_saved*Q_coeffs) / Q_coeffs;
-refs = floor(refs_saved*Q_refs) / Q_refs;
-
-%% Decoder
-
-predicted = predictor_decoder(refs, taus, coeffs, blocks);
-
-%% Improvment from linear
-mov_err = zeros(M,N);
-
-for i=1:M
-    for j=1:N
-        ref = squeeze(grey_LF(i+(15-M)/2,j+(15-N)/2,:,:));
-        mov_err(i,j) = psnr(squeeze(predicted(i,j,:,:)), ref);
+for i = 1:length(stats)
+    if stats(i).bpp > 1e-5
+        msg1 = sprintf('%s',stats(i).name);
+        tab = repmat(sprintf('\t'), 1, 2 - fix(length(msg1)/8));
+        msg2 =sprintf('%.5f\n',stats(i).bpp);
+        fprintf([msg1, tab, msg2]);
     end
 end
 
-%% Efficiency
+%% Decoding
+decoded_LF = decoder(filename);
 
-compress_ratio = 16*size(grey_LF(:)) / (size(taus(:))*log2(Q_taus) + size(coeffs(:))*log2(Q_coeffs) + size(refs(:))*log2(Q_refs))
-
-err_considered = mov_err(2:end-1,2:end-1);
-mov_perf = mean(err_considered(:))
-
-%%
-LFDispVidCirc(repmat(predicted, [1 1 1 1 3]));
+%% Assess quality
+disp("mean psnr :");
+disp(lf_psnr(decoded_LF, grey_LF));
 
 %%
-LFDispVidCirc(repmat(lin_pred, [1 1 1 1 3]));
+LFDispVidCirc(repmat(decoded_LF, [1 1 1 1 3]));
 
-%%
-LFDispVidCirc(repmat(grey_LF, [1 1 1 1 3]));
-
-%%
-
-LFDispMousePan(repmat(predicted, [1 1 1 1 3]));
 
 %% Display coeffs
 figure;
@@ -139,7 +129,6 @@ end
 % computing coeffs) (or use coeffs to discard corners ?)
 
 %% Display residuals
-
 residuals = grey_LF - predicted;
 range = [min(residuals(:)) max(residuals(:))];
 
@@ -167,4 +156,3 @@ end
 figure;
 histogram(residuals(:)*65535);  % -> entropy coding, quantization, not so sparse... 
 % PCA ? (patterns in space domain so sample is 1 view, features are pxl...)
-
