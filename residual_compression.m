@@ -37,8 +37,8 @@ s_sign = s >= 0;
 c_sign = c >= 0;
 
 if quantization_mode == 'lin'
-    sq=round(s.*Q_pca./s_range);
-    cq=round(c.*Q_pca./c_range);
+    sq=round(abs(s.*Q_pca/2./s_range));
+    cq=round(abs(c.*Q_pca/2./c_range));
 elseif quantization_mode == 'log'
     scale = exp(Q_pca/2 - 1);   % cause bit of sign
     sq= round(log(abs(s.*scale./s_range) + 1));

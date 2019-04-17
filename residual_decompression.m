@@ -9,8 +9,8 @@ Q_pca = 2^n_bits;
 
 mu = muq * mu_range/2^15;
 if quantization_mode == 'lin'
-    s = sq/Q_pca*s_range;
-    c = cq/Q_pca*c_range;
+    s = (s_sign*2-1) .* sq*2/Q_pca*s_range;
+    c = (c_sign*2-1) .* cq*2/Q_pca*c_range;
 elseif quantization_mode == 'log'
     scale = exp(Q_pca/2 - 1);   % cause bit of sign
     s = (s_sign*2-1) .* (exp(sq) - 1)/scale * s_range;
