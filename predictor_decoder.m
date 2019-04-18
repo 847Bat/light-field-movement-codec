@@ -4,7 +4,7 @@ function predicted = predictor_decoder(refs, taus, coeffs, blocks)
 % Reconstruct predicted image
 
 [~, M, N, ~, ~] = size(taus);
-[O, P, ~] = size(refs);
+[~, O, P] = size(refs);
 nb_blocks = size(blocks, 1);
 predicted = zeros(M, N, O, P);
 reverseStr = [];
@@ -18,13 +18,13 @@ for i_block = 1:nb_blocks
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
     
-    crt_ref = refs(mpxli,mpxlj,:);
+    crt_ref = refs(:,mpxli,mpxlj);
 
     crt_tau = squeeze(taus(i_block, :,:,:,:));
     crt_coeffs = squeeze(coeffs(i_block, :,:,:));
 
     predicted(:,:,mpxli,mpxlj) = ...
-        min(block_predictor_decoder(crt_ref, crt_tau, crt_coeffs),1);
+        max(min(block_predictor_decoder(crt_ref, crt_tau, crt_coeffs),1),0);
 end
 fprintf('\tDone\n');
 

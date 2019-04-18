@@ -7,6 +7,9 @@ O = sizes(3);
 P = sizes(4);
 Q_pca = 2^n_bits;
 
+sq = sq + .5;
+cq = cq + .5;
+
 mu = muq * mu_range/2^15;
 if quantization_mode == 'lin'
     s = (s_sign*2-1) .* sq*2/Q_pca*s_range;

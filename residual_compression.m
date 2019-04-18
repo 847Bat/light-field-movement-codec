@@ -37,12 +37,12 @@ s_sign = s >= 0;
 c_sign = c >= 0;
 
 if quantization_mode == 'lin'
-    sq=round(abs(s.*Q_pca/2./s_range));
-    cq=round(abs(c.*Q_pca/2./c_range));
+    sq=floor(abs(s.*Q_pca/2./s_range));
+    cq=floor(abs(c.*Q_pca/2./c_range));
 elseif quantization_mode == 'log'
     scale = exp(Q_pca/2 - 1);   % cause bit of sign
-    sq= round(log(abs(s.*scale./s_range) + 1));
-    cq= round(log(abs(c.*scale./c_range) + 1));
+    sq= floor(log(abs(s.*scale./s_range) + 1));
+    cq= floor(log(abs(c.*scale./c_range) + 1));
 else
     disp("Unrecognize mode of quantization. Possibilities are lin or log.");
     return;

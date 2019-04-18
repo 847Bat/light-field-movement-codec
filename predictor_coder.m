@@ -1,10 +1,10 @@
-function [taus, coeffs] = predictor_coder(grey_LF, refs, blocks)
+function [taus, coeffs, predicted] = predictor_coder(domain, refs, blocks)
 %PREDICTOR_CODER Summary of this function goes here
 %   Detailed explanation goes here
 
-[M, N, ~, ~] = size(grey_LF);
+[M, N, ~, ~] = size(domain);
 nb_blocks = size(blocks,1);
-Q = size(refs, 3);
+Q = size(refs, 1);
 coeffs = zeros(nb_blocks,M,N,Q);
 taus = zeros(nb_blocks,M,N,Q,2, 'int16');
 reverseStr = [];
@@ -22,19 +22,16 @@ for i_block = 1:nb_blocks
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
     
-    crt_ref = refs(mpxli,mpxlj,:);
-    domain = grey_LF(:,:,mpxli,mpxlj);
+    crt_ref = refs(:,mpxli,mpxlj);
+    crt_domain = domain(:,:,mpxli,mpxlj);
 
     % Find the translations
-    tau = block_predictor_coder(domain, crt_ref, 1);
+    tau = block_predictor_coder(crt_domain, crt_ref, 1);
     taus(i_block, :,:,:,:) = tau;
 end
 fprintf('\t\tDone\n');
 
-% Compressing taus
-Q_taus = max(abs(taus(:)))*2;
-taus = min(max(taus,-Q_taus/2),Q_taus/2);   % taus are int, force range
-
+predicted = zeros(size(domain));
 reverseStr = [];
 fprintf('\tComputing coefficients : ');
 for i_block = 1:nb_blocks
@@ -46,11 +43,11 @@ for i_block = 1:nb_blocks
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
     
     tau = squeeze(taus(i_block, :,:,:,:));
-    crt_ref = refs(mpxli,mpxlj,:);
-    domain = grey_LF(:,:,mpxli,mpxlj);
+    crt_ref = refs(:,mpxli,mpxlj);
+    crt_domain = domain(:,:,mpxli,mpxlj);
     
     % Compute coeffs
-    coeffs(i_block, :,:,:) = block_compute_coeffs(domain, tau, crt_ref);
+    coeffs(i_block, :,:,:) = block_compute_coeffs(crt_domain, tau, crt_ref);
 end
 fprintf('\tDone\n');
 
