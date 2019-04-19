@@ -3,7 +3,8 @@ addpath(genpath('modules/subaxis'));
 addpath(genpath('modules/light-field-toolbox'));
 addpath(genpath('modules/light-field-graph-codec'));
 
-load 'data/4DLF/Grids/Danger_de_Mort.mat'
+load 'data/4DLF/People/Fountain_&_Vincent_2.mat'    %41.36 // 42.6 with backward (20c/5c) (41.5 without refs)
+% load 'data/4DLF/Grids/Danger_de_Mort.mat'    %41.42 // 42.9 with backward (20c/5c) (41.3 without refs)
 
 filename = 'compressed.mat';
 

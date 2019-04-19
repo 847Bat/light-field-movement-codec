@@ -10,7 +10,7 @@ y0 = floor((kappa-1)*m/2)+1;
 y1 = floor((kappa+1)*m/2);
 
 CROSS = zeros(kappa*n, kappa*m);
-CROSS(x0:x1, y0:y1) = fftshift(R .* conj(T));
+CROSS(x0:x1, y0:y1) = fftshift(R .* conj(T)./abs(R.*conj(T)));
 cross = abs(ifft2(ifftshift(CROSS)));
 
 ma = max(cross(:));

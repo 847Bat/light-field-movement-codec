@@ -17,14 +17,12 @@ for i_block = 1:nb_blocks
     
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
-    
-    crt_ref = refs(:,mpxli,mpxlj);
 
     crt_tau = squeeze(taus(i_block, :,:,:,:));
     crt_coeffs = squeeze(coeffs(i_block, :,:,:));
 
     predicted(:,:,mpxli,mpxlj) = ...
-        max(min(block_predictor_decoder(crt_ref, crt_tau, crt_coeffs),1),0);
+        max(min(block_predictor_decoder(refs, crt_tau, crt_coeffs, mpxli, mpxlj),1),0);
 end
 fprintf('\tDone\n');
 

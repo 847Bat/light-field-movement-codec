@@ -1,12 +1,12 @@
-function [taus, coeffs, predicted] = predictor_coder(domain, refs, blocks)
+function [taus, coeffs] = predictor_coder(domain, refs, blocks)
 %PREDICTOR_CODER Summary of this function goes here
 %   Detailed explanation goes here
 
 [M, N, ~, ~] = size(domain);
 nb_blocks = size(blocks,1);
-Q = size(refs, 1);
+[Q, O, P] = size(refs);
 coeffs = zeros(nb_blocks,M,N,Q);
-taus = zeros(nb_blocks,M,N,Q,2, 'int16');
+taus = zeros(nb_blocks,M,N,Q,2);
 reverseStr = [];
 
 % Compressing refs TODO : HEVC
@@ -21,17 +21,20 @@ for i_block = 1:nb_blocks
 
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
+    mpxli_e = max(blocks(i_block,1,1)-10,1):min(blocks(i_block,1,2)+10, O);
+    mpxlj_e = max(blocks(i_block,2,1)-10,1):min(blocks(i_block,2,2)+10, P);    
     
-    crt_ref = refs(:,mpxli,mpxlj);
     crt_domain = domain(:,:,mpxli,mpxlj);
+    crt_ref = refs(:,mpxli,mpxlj);
 
     % Find the translations
-    tau = block_predictor_coder(crt_domain, crt_ref, 1);
-    taus(i_block, :,:,:,:) = tau;
+    tau = block_predictor_coder(crt_domain, crt_ref, 1);% + ...
+        %reshape([mpxli_e(1)-mpxli(1)-1 mpxlj_e(1)-mpxlj(1)-1], [1 1 1 2]);
+    taus(i_block, :,:,:,:) = tau;%cat(4, mod(tau(:,:,:,1)+O/2,O)-O/2,  mod(tau(:,:,:,2)+P/2,P)-P/2);
 end
 fprintf('\t\tDone\n');
+save('tmp.mat', 'taus');
 
-predicted = zeros(size(domain));
 reverseStr = [];
 fprintf('\tComputing coefficients : ');
 for i_block = 1:nb_blocks
@@ -43,11 +46,10 @@ for i_block = 1:nb_blocks
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
     
     tau = squeeze(taus(i_block, :,:,:,:));
-    crt_ref = refs(:,mpxli,mpxlj);
     crt_domain = domain(:,:,mpxli,mpxlj);
     
     % Compute coeffs
-    coeffs(i_block, :,:,:) = block_compute_coeffs(crt_domain, tau, crt_ref);
+    coeffs(i_block, :,:,:) = block_compute_coeffs(crt_domain, tau, refs, mpxli, mpxlj);
 end
 fprintf('\tDone\n');
 

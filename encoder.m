@@ -57,19 +57,19 @@ domain1 = grey_LF(1:2:end, 1:2:end, :, :);
 % Decoder
 disp("Decoder");
 predicted = predictor_decoder(refs, taus, coeffs, blocks);
-
+save('tmp2.mat','predicted');
 disp(lf_psnr(predicted, domain1));
 
 % Residual compression
 disp("Residual compression");
 nb_bits = 4;
-nb_components = 10;
+nb_components = 20;
 [sq, s_range, s_sign, cq, c_range, c_sign, muq, muq_range]  = ...
     residual_compression(domain1, predicted, nb_components, nb_bits, 'log');
 
 res_reconstructed = residual_decompression(sq, s_sign, s_range, cq, c_sign,...
  c_range, muq, muq_range, nb_bits, 'log', size(domain1));
-
+save('tmp3.mat','res_reconstructed');
 disp(lf_psnr(predicted + res_reconstructed, domain1));
 
 refs2 = reshape(max(min(predicted + res_reconstructed, 1),0), ...
