@@ -1,10 +1,9 @@
 function res_reconstructed = residual_decompression(sq, s_sign, s_range, cq, c_sign, c_range, muq, mu_range, n_bits, quantization_mode, sizes)
 %RESIDUAL_DECOMPRESSION Summary of this function goes here
 %   Detailed explanation goes here
-M = sizes(1);
-N = sizes(2);
-O = sizes(3);
-P = sizes(4);
+N = sizes(1);
+O = sizes(2);
+P = sizes(3);
 Q_pca = 2^n_bits;
 
 sq = sq + .5;
@@ -24,10 +23,10 @@ else
 end
 
 res_rows_reconstructed = s*c.' + repmat(mu,length(s),1);
-res_reconstructed = zeros(M,N,O,P);
+res_reconstructed = zeros(N,O,P);
 for i=1:O
     for j=1:P
-        res_reconstructed(:,:,i,j) = reshape(res_rows_reconstructed((i-1)*P+j,:), [M N]);
+        res_reconstructed(:,i,j) = res_rows_reconstructed((i-1)*P+j,:);
     end
 end
 end

@@ -3,10 +3,10 @@ function predicted = predictor_decoder(refs, taus, coeffs, blocks)
 %   Detailed explanation goes here
 % Reconstruct predicted image
 
-[~, M, N, ~, ~] = size(taus);
+[~, N, ~, ~] = size(taus);
 [~, O, P] = size(refs);
 nb_blocks = size(blocks, 1);
-predicted = zeros(M, N, O, P);
+predicted = zeros(N, O, P);
 reverseStr = [];
 
 fprintf('\tDecoding block : ');
@@ -18,10 +18,10 @@ for i_block = 1:nb_blocks
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
 
-    crt_tau = squeeze(taus(i_block, :,:,:,:));
-    crt_coeffs = squeeze(coeffs(i_block, :,:,:));
+    crt_tau = squeeze(taus(i_block,:,:,:));
+    crt_coeffs = squeeze(coeffs(i_block,:,:));
 
-    predicted(:,:,mpxli,mpxlj) = ...
+    predicted(:,mpxli,mpxlj) = ...
         max(min(block_predictor_decoder(refs, crt_tau, crt_coeffs, mpxli, mpxlj),1),0);
 end
 fprintf('\tDone\n');

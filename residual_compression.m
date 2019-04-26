@@ -10,17 +10,17 @@ function [sq, s_range, s_sign, cq, c_range, c_sign, muq, mu_range]  = ...
 
 % Do it per block ??? -> some blocks have no residuals...
 
-[M, N, O, P] = size(ground_truth);
+[N, O, P] = size(ground_truth);
 residuals = ground_truth - predicted;
 
-ref_rows = zeros(O*P, M*N);
-pred_rows = zeros(O*P, M*N);
-res_rows = zeros(O*P, M*N);
+ref_rows = zeros(O*P, N);
+pred_rows = zeros(O*P, N);
+res_rows = zeros(O*P, N);
 for i=1:O
     for j=1:P
-        ref_rows((i-1)*P+j,:) = reshape(ground_truth(:,:,i,j),[M*N 1]);
-        res_rows((i-1)*P+j,:) = reshape(residuals(:,:,i,j),[M*N 1]);
-        pred_rows((i-1)*P+j,:) = reshape(predicted(:,:,i,j),[M*N 1]);
+        ref_rows((i-1)*P+j,:) = ground_truth(:,i,j);
+        res_rows((i-1)*P+j,:) = residuals(:,i,j);
+        pred_rows((i-1)*P+j,:) = predicted(:,i,j);
     end
 end
 

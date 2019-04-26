@@ -6,6 +6,8 @@ addpath(genpath('modules/light-field-graph-codec'));
 load 'data/4DLF/People/Fountain_&_Vincent_2.mat'    %41.36 // 42.6 with backward (20c/5c) (41.5 without refs)
 % load 'data/4DLF/Grids/Danger_de_Mort.mat'    %41.42 // 42.9 with backward (20c/5c) (41.3 without refs)
 
+% block matching : FV2 -> 42.2 / 40.9, DdM -> 42.46 / 40.8
+
 filename = 'compressed.mat';
 
 % Transform to double
@@ -35,11 +37,11 @@ for i = 1:length(stats)
 end
 
 %% Decoding
-[a,b,c,decoded_LF] = decoder(filename);
+decoded_LF = decoder(filename);
 
 %% Assess quality
 disp("mean psnr :");
-disp(lf_psnr(decoded_LF, grey_LF));
+disp(total_psnr(decoded_LF, grey_LF));
 
 %%
 LFDispVidCirc(repmat(decoded_LF, [1 1 1 1 3]));
