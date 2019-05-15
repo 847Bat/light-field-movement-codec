@@ -5,10 +5,10 @@ function my_psnr = total_psnr(im,ref)
 p = zeros(M,N);
 for i=1:M
     for j=1:N
-        p(i,j) = psnr(squeeze(im(i,j,:,:)),squeeze(ref(i,j,:,:)));
+        p(i,j) = psnr(squeeze(im(i,j,:,:,:)),squeeze(ref(i,j,:,:,:)));
     end
 end
 disp(p);
-my_psnr = mean(mean(p(p<80)));
+my_psnr = mean(mean(p));
 end
 

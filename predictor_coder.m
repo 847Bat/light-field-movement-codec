@@ -5,7 +5,7 @@ function [taus, coeffs] = predictor_coder(domain, refs, blocks)
 [N, ~, ~] = size(domain);
 nb_blocks = size(blocks,1);
 [Q, O, P] = size(refs);
-coeffs = zeros(nb_blocks,N,Q);
+coeffs = zeros(nb_blocks,N,Q);%2*Q);
 taus = zeros(nb_blocks,N,Q,2);
 reverseStr = [];
 
@@ -41,7 +41,7 @@ fprintf('\tComputing coefficients : ');
 for i_block = 1:nb_blocks
     msg = sprintf('%d/%d', i_block, nb_blocks);
     fprintf([reverseStr, msg]);
-    %reverseStr = repmat(sprintf('\b'), 1, length(msg));
+    reverseStr = repmat(sprintf('\b'), 1, length(msg));
 
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);

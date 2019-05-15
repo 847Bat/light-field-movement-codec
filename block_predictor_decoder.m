@@ -13,8 +13,10 @@ for i=1:n
         i_range = min(max(mpxli - tau(i,k,1), 1), p_tot);
         j_range = min(max(mpxlj - tau(i,k,2), 1), q_tot);
         crt_trans = squeeze(refs(k, i_range, j_range));
+        %crt_ref = squeeze(refs(k, mpxli, mpxlj));
 
         predicted(i,:,:) = squeeze(predicted(i,:,:)) + coeffs(i,k).*crt_trans;
+        %predicted(i,:,:) = squeeze(predicted(i,:,:)) + coeffs(i,k+o).*crt_ref;
     end
 end
 end

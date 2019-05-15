@@ -17,4 +17,9 @@ ma = max(cross(:));
 [ty, tx] = find(cross==ma,1,'first');
 
 tau = [mod((ty-1)/kappa + n/2,n)-n/2 mod((tx-1)/kappa + m/2,m)-m/2];
+
+if size(tau,1) == 0
+    disp(tau)
+    tau = [0 0];
+end
 end
