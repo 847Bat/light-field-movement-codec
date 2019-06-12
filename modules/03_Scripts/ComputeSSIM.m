@@ -44,10 +44,6 @@ for k = 1:m
         SSIM_YUV(k,l) = (6*SSIM_Y(k,l)+SSIM_U(k,l)+SSIM_V(k,l))/8;
     end
 end
-SSIM_Y = SSIM_Y(2:end-1,2:end-1);
-SSIM_U = SSIM_U(2:end-1,2:end-1);
-SSIM_V = SSIM_V(2:end-1,2:end-1);
-SSIM_YUV = SSIM_YUV(2:end-1,2:end-1);
 
 SSIM_Y(isinf(SSIM_Y)) = NaN;
 SSIM_U(isinf(SSIM_U)) = NaN;

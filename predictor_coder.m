@@ -1,15 +1,15 @@
-function [taus, coeffs] = predictor_coder(domain, refs, blocks)
+function [taus, coeffs] = predictor_coder(domain, refs, blocks, closest_refs_grey)
 %PREDICTOR_CODER Summary of this function goes here
 %   Detailed explanation goes here
 
 [N, ~, ~] = size(domain);
 nb_blocks = size(blocks,1);
-[Q, O, P] = size(refs);
-coeffs = zeros(nb_blocks,N,Q);%2*Q);
-taus = zeros(nb_blocks,N,Q,2);
+[~, O, P] = size(refs);
+nb_neighbors = size(closest_refs_grey,2);
+coeffs = zeros(nb_blocks,N,nb_neighbors);%2*nb_neighbors);
+taus = zeros(nb_blocks,N,nb_neighbors,2);
 reverseStr = [];
 
-% Compressing refs TODO : HEVC
 Q_refs = 2^16;
 refs = floor(refs*Q_refs) / Q_refs;
 
@@ -29,7 +29,7 @@ for i_block = 1:nb_blocks
     crt_ref = refs(:,mpxli,mpxlj);
 
     % Find the translations
-    tau = block_predictor_coder(crt_domain, crt_ref, 1);
+    tau = block_predictor_coder(crt_domain, crt_ref, closest_refs_grey, 1);
 %     tau = - (block_matching(crt_domain, crt_ref) - ...
 %         reshape([mpxli(1) - mpxli_e(1) mpxlj(1) - mpxlj_e(1)], [1 1 1 2]) - 1);
     taus(i_block, :,:,:) = tau;
@@ -46,11 +46,11 @@ for i_block = 1:nb_blocks
     mpxli = blocks(i_block,1,1):blocks(i_block,1,2);
     mpxlj = blocks(i_block,2,1):blocks(i_block,2,2);
     
-    tau = squeeze(taus(i_block, :,:,:));
+    tau = reshape(taus(i_block, :,:,:), [size(taus,2), size(taus,3), size(taus,4)]);
     crt_domain = domain(:,mpxli,mpxlj);
     
     % Compute coeffs
-    crt_coeffs = block_compute_coeffs(crt_domain, tau, refs, mpxli, mpxlj);
+    crt_coeffs = block_compute_coeffs(crt_domain, tau, refs, mpxli, mpxlj, closest_refs_grey);
     
     coeffs(i_block,:,:) = crt_coeffs;
     

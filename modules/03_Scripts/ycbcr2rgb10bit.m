@@ -26,7 +26,7 @@ M = [   1  0        1.57480 ;
 
 rgb = reshape(ycbcr, [], 3) * M';
 rgb = reshape(rgb, size(ycbcr));
-% rgb = uint16(clip(rgb, 0,1023));
+rgb = uint16(clip(rgb, 0,1023));
 end
 
 function [out] = clip(in, min, max)

@@ -1,10 +1,40 @@
-function my_blocks = segmentation(grey_LF)
+function my_blocks = segmentation(grey_LF, blocks_nb)
 %SEGMENTATION Summary of this function goes here
 
 resized = imresize(abs(squeeze(grey_LF(7,2,:,:)) - squeeze(grey_LF(7,12,:,:))) + ...
     abs(squeeze(grey_LF(2,7,:,:)) - squeeze(grey_LF(12,7,:,:))), [512 512]);
 
-S = qtdecomp(resized, 0.9, [32 128]);
+low_blocks_nb = 0.9*blocks_nb;
+high_blocks_nb = 1.1*blocks_nb;
+th = 0.9;
+step = 0.1;
+max_iter = 20;
+
+S = qtdecomp(resized, th, [32 256]);
+S2 = S;
+n_iter = 0;
+while length(find(S>0)) < low_blocks_nb || length(find(S>0)) > high_blocks_nb
+    n_iter = n_iter + 1;
+    if length(find(S>0)) < low_blocks_nb
+        if length(find(S2>0)) > high_blocks_nb
+            step = step / 2;
+        end
+        th = th - step;
+    elseif length(find(S>0)) > high_blocks_nb
+        if length(find(S2>0)) < low_blocks_nb
+            step = step / 2;
+        end
+        th = th + step;
+    end
+    S2 = S;
+    S = qtdecomp(resized, th, [32 256]);
+    if n_iter > max_iter
+        break
+    end
+    if th < 0
+        th = 0.001;
+    end
+end
 
 my_blocks = zeros(length(find(S>0)), 2, 2);
 resizer = [(size(grey_LF,3)-1)/511 0 ; 0 (size(grey_LF,4)-1)/511];
