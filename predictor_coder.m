@@ -1,4 +1,4 @@
-function [taus, coeffs] = predictor_coder(domain, refs, blocks, closest_refs_grey)
+function [taus, coeffs] = predictor_coder(domain, refs, blocks, closest_refs_grey, prec)
 %PREDICTOR_CODER Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -29,7 +29,7 @@ for i_block = 1:nb_blocks
     crt_ref = refs(:,mpxli,mpxlj);
 
     % Find the translations
-    tau = block_predictor_coder(crt_domain, crt_ref, closest_refs_grey, 1);
+    tau = block_predictor_coder(crt_domain, crt_ref, closest_refs_grey, prec);
 %     tau = - (block_matching(crt_domain, crt_ref) - ...
 %         reshape([mpxli(1) - mpxli_e(1) mpxlj(1) - mpxlj_e(1)], [1 1 1 2]) - 1);
     taus(i_block, :,:,:) = tau;

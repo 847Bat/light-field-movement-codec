@@ -38,6 +38,8 @@ function status = encoder(LF, filename, mask_refs, masks, nb_components, qp, fmt
 % The remaining parameters have been encoded in filename.params.mat
 
 % Transform LF from RGB, 10 bits to YUV, double
+prec = 1;
+
 LF_ycbcr = zeros(size(LF), 'uint16');
 for i=1:size(LF,1)
     for j=1:size(LF,2)
@@ -76,7 +78,7 @@ for i=1:size(masks,1)
     % Predictor
     disp("Predictor");
     crt_domain = reshape(grey_LF(squeeze(masks_grey(i,:,:,:,:))), [sum(sum(masks(i,:,:))) size(grey_LF,3) size(grey_LF, 4)]);
-    [taus, coeffs] = predictor_coder(crt_domain, refs, blocks, my_closest_refs_grey{i});
+    [taus, coeffs] = predictor_coder(crt_domain, refs, blocks, my_closest_refs_grey{i}, prec);
     coeffs = floor((coeffs - min(coeffs(:)))*(2^16-1)/(max(coeffs(:))-min(coeffs(:))))*(max(coeffs(:))-min(coeffs(:)))/(2^16-1) + min(coeffs(:));
 
     % Decoder
@@ -122,7 +124,8 @@ for i=1:size(masks,1)
     end
     
     % Saving data    
-    taus_c{i} = bwpack(de2bi(taus(:) - min(taus(:))));
+    save('taus.mat', 'taus');
+    taus_c{i} = bwpack(de2bi((taus(:) - min(taus(:)))*prec));
     taus_c_p{i} = cast(size(taus), 'uint32');
     taus_c_p2{i} = min(taus(:));
     coeffs_c{i} = bwpack(de2bi(floor((coeffs - min(coeffs(:)))*(2^16-1)/(max(coeffs(:))-min(coeffs(:))))));
@@ -152,7 +155,7 @@ mask_refs_c_p = cast(size(mask_refs), 'uint32');
 masks_c = bwpack(masks(:));
 masks_c_p = cast(size(masks), 'uint32');
 save([filename '_params.mat'], 'nb_components', 'sizes_c', 'masks_c', 'masks_c_p', ...
-    'mask_refs_c', 'mask_refs_c_p', 'qp', 'img', 'fmt', 'nb_neighbors');
+    'mask_refs_c', 'mask_refs_c_p', 'qp', 'img', 'fmt', 'nb_neighbors', 'prec');
 
 save([filename '_residuals.mat'], 'sq_c','sq_c_p','sq_c_p2', ...
     'sq_c_p3', 'cq_c','cq_c_p','cq_c_p2', 'cq_c_p3', 'muq_c', ...

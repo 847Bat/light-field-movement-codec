@@ -2,7 +2,7 @@
 addpath(genpath('modules/light-field-toolbox'));
 addpath(genpath('modules/03_Scripts'));
 
-img = 'I04';
+img = 'I01';
 
 filename = [img 'compressed'];
 
@@ -21,11 +21,11 @@ masks = zeros(1, size(LF,1), size(LF,2), 'logical');
 masks(1, :, :) = 1;
 masks(1, mask_refs) = 0;
 
-nb_neighbors = [[40 4 4]];
-nb_components = [10];
-qp = 15;
+nb_neighbors = [[20 4 4]];
+nb_components = [0];
+qp = 25;
 fmt = '420';
-nb_blocks = 100;
+nb_blocks = 70;
 
 %% Build masks and options (configuration 1, 0.75bpp)
 
@@ -81,10 +81,10 @@ decoded_LF = decoder(filename);
 disp("Quality metrics :");
 
 [PSNR_Y, PSNR_U, PSNR_V, PSNR_YUV, PSNR_Y_mean, PSNR_U_mean, PSNR_V_mean, PSNR_YUV_mean] = ComputePSNR(decoded_LF, LF_10b);
-[SSIM_Y, SSIM_U, SSIM_V, SSIM_YUV, SSIM_Y_mean, SSIM_U_mean, SSIM_V_mean, SSIM_YUV_mean] = ComputeSSIM(decoded_LF, LF_10b);
+%[SSIM_Y, SSIM_U, SSIM_V, SSIM_YUV, SSIM_Y_mean, SSIM_U_mean, SSIM_V_mean, SSIM_YUV_mean] = ComputeSSIM(decoded_LF, LF_10b);
 PSNR_Y_mean
 PSNR_YUV_mean
-SSIM_Y_mean
+%SSIM_Y_mean
 
 %%
 LFDispVidCirc(im2double(decoded_LF));

@@ -52,7 +52,7 @@ my_closest_refs_v = closest_refs(mask_refs, masks, squeeze(nb_neighbors(:,3)));
 for i=1:size(masks,1)
     disp("LEVEL " + int2str(i));
     
-    taus = reshape(bi2de(bwunpack(taus_c{i}, prod(taus_c_p{i}))), taus_c_p{i}) + cast(taus_c_p2{i}, 'double');
+    taus = reshape(bi2de(bwunpack(taus_c{i}, prod(taus_c_p{i}))), taus_c_p{i})/prec + cast(taus_c_p2{i}, 'double');
     coeffs = reshape(bi2de(bwunpack(coeffs_c{i}, prod(coeffs_c_p{i}))), coeffs_c_p{i})*coeffs_c_p3{i}/(2^16-1) + coeffs_c_p2{i};
     
     coeffs_u = zeros(size(coeffs));
