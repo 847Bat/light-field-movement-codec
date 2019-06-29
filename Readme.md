@@ -1,4 +1,4 @@
-# Light field movement codec
+# Light field translation codec
 
 Table of content:
 - Description
