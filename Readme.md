@@ -1,13 +1,19 @@
 # Light field translation codec
 
 Table of content:
-- Description
+- Description & Terms of Use
 - Installation
 - Usage
 - Remarks
 
-## Description
-This is a codec to compress light field images, using object translation.
+## Description & Terms of Use
+Light field technology has recently been gaining traction in the research community. Several acquisition technologies have been demonstrated to properly capture light field information, and portable devices have been commercialized to the general public. However, new and efficient compression algorithms are needed to sensibly reduce the amount of data that needs to be stored and transmitted, while maintaining an adequate level of perceptual quality. 
+In this paper, we propose a novel light field compression scheme that uses view estimation to recover the entire light field from a small subset of encoded views.
+Experimental results on a widely used light field dataset show that our method achieves good coding efficiency with average rate savings of 54.83% with respect to HEVC.
+
+The codec is implemented in MATLAB. If you use this code in your research, please cite our paper:
+
+B. Hériard-Dubreuil, I. Viola and T. Ebrahimi. "Light field compression using translation-assisted view estimation". 2019. 34th Picture Coding Symposium (PCS), Ningbo, China, November 12-15, 2019. 
 
 ## Installation
 
